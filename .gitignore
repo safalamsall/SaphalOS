@@ -1,0 +1,4 @@
+build/
+tools/qemu/deb/
+tools/qemu/root/
+*.log
