@@ -16,13 +16,18 @@ echo "  Building SAPHAL OS Hardened Userspace RootFS"
 echo "=========================================================="
 
 rm -rf "$ROOTFS_DIR"
-mkdir -p "$ROOTFS_DIR"/{bin,sbin,etc,proc,sys,dev,tmp,run,mnt,root}
+mkdir -p "$ROOTFS_DIR"/{bin,sbin,etc/saphal,proc,sys,dev,tmp,run,mnt,root}
 
 echo "[1/4] Compiling static system binaries..."
 gcc -static -O2 -Wall -Wextra "$PROJECT_DIR/services/init.c" -o "$ROOTFS_DIR/init"
 gcc -static -O2 -Wall -Wextra "$PROJECT_DIR/services/secd.c" -o "$ROOTFS_DIR/bin/saphal-secd"
 gcc -static -O2 -Wall -Wextra "$PROJECT_DIR/ui/framebuffer.c" "$PROJECT_DIR/ui/splash.c" -o "$ROOTFS_DIR/bin/saphal-splash"
 gcc -static -O2 -Wall -Wextra "$PROJECT_DIR/userspace/diagnostics.c" "$PROJECT_DIR/userspace/cli/saphal_sh.c" -o "$ROOTFS_DIR/bin/saphal-sh"
+
+# Copy owner avatar into rootfs
+if [ -f "$PROJECT_DIR/assets/owner_avatar.ppm" ]; then
+    cp "$PROJECT_DIR/assets/owner_avatar.ppm" "$ROOTFS_DIR/etc/saphal/owner_avatar.ppm"
+fi
 
 # Create standard symlinks
 ln -sf /bin/saphal-sh "$ROOTFS_DIR/bin/sh"

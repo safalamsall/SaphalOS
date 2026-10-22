@@ -165,7 +165,6 @@ void fb_draw_pixel(fb_context_t* ctx, int x, int y, uint32_t color) {
         uint32_t* ptr = (uint32_t*)(ctx->fbp + (y * ctx->width + x) * 4);
         *ptr = color;
     } else if (ctx->bpp == 16) {
-        // RGB565
         uint16_t r = (color >> 19) & 0x1F;
         uint16_t g = (color >> 10) & 0x3F;
         uint16_t b = (color >> 3) & 0x1F;
@@ -217,6 +216,122 @@ void fb_draw_string(fb_context_t* ctx, int x, int y, const char* str, uint32_t c
             fb_draw_char(ctx, cur_x, cur_y, str[i], color, scale);
             cur_x += 8 * scale;
         }
+    }
+}
+
+void fb_draw_circle(fb_context_t* ctx, int cx, int cy, int radius, uint32_t color) {
+    int x = radius;
+    int y = 0;
+    int err = 0;
+
+    while (x >= y) {
+        fb_draw_pixel(ctx, cx + x, cy + y, color);
+        fb_draw_pixel(ctx, cx + y, cy + x, color);
+        fb_draw_pixel(ctx, cx - y, cy + x, color);
+        fb_draw_pixel(ctx, cx - x, cy + y, color);
+        fb_draw_pixel(ctx, cx - x, cy - y, color);
+        fb_draw_pixel(ctx, cx - y, cy - x, color);
+        fb_draw_pixel(ctx, cx + y, cy - x, color);
+        fb_draw_pixel(ctx, cx + x, cy - y, color);
+
+        if (err <= 0) {
+            y += 1;
+            err += 2 * y + 1;
+        }
+        if (err > 0) {
+            x -= 1;
+            err -= 2 * x + 1;
+        }
+    }
+}
+
+void fb_fill_circle(fb_context_t* ctx, int cx, int cy, int radius, uint32_t color) {
+    for (int y = -radius; y <= radius; y++) {
+        for (int x = -radius; x <= radius; x++) {
+            if (x * x + y * y <= radius * radius) {
+                fb_draw_pixel(ctx, cx + x, cy + y, color);
+            }
+        }
+    }
+}
+
+int fb_load_ppm(const char* filename, fb_image_t* img) {
+    if (!filename || !img) return -1;
+    FILE* fp = fopen(filename, "rb");
+    if (!fp) return -1;
+
+    char header[16];
+    if (fscanf(fp, "%15s", header) != 1 || strcmp(header, "P6") != 0) {
+        fclose(fp);
+        return -1;
+    }
+
+    int w = 0, h = 0, maxval = 0;
+    if (fscanf(fp, "%d %d %d", &w, &h, &maxval) != 3 || maxval != 255 || w <= 0 || h <= 0) {
+        fclose(fp);
+        return -1;
+    }
+    fgetc(fp); // skip newline
+
+    img->width = (uint32_t)w;
+    img->height = (uint32_t)h;
+    img->pixels = (uint32_t*)malloc(w * h * sizeof(uint32_t));
+
+    for (int i = 0; i < w * h; i++) {
+        uint8_t r = fgetc(fp);
+        uint8_t g = fgetc(fp);
+        uint8_t b = fgetc(fp);
+        img->pixels[i] = 0xFF000000 | (r << 16) | (g << 8) | b;
+    }
+    fclose(fp);
+    return 0;
+}
+
+void fb_draw_image(fb_context_t* ctx, int dx, int dy, const fb_image_t* img) {
+    if (!ctx || !img || !img->pixels) return;
+    for (uint32_t y = 0; y < img->height; y++) {
+        for (uint32_t x = 0; x < img->width; x++) {
+            uint32_t color = img->pixels[y * img->width + x];
+            fb_draw_pixel(ctx, dx + x, dy + y, color);
+        }
+    }
+}
+
+void fb_draw_avatar_or_placeholder(fb_context_t* ctx, int cx, int cy, int radius, const char* image_path, const char* initial) {
+    // 1. Draw glowing accent outer ring (Cyan)
+    for (int r = radius + 1; r <= radius + 5; r++) {
+        fb_draw_circle(ctx, cx, cy, r, 0xFF00F5D4);
+    }
+
+    fb_image_t img;
+    int loaded = 0;
+    if (image_path && fb_load_ppm(image_path, &img) == 0) {
+        loaded = 1;
+        // Blit image cropped into circle
+        for (int y = -radius; y <= radius; y++) {
+            for (int x = -radius; x <= radius; x++) {
+                if (x * x + y * y <= radius * radius) {
+                    // Map x, y into image coordinates
+                    uint32_t img_x = (uint32_t)((x + radius) * img.width / (2 * radius));
+                    uint32_t img_y = (uint32_t)((y + radius) * img.height / (2 * radius));
+                    if (img_x < img.width && img_y < img.height) {
+                        uint32_t col = img.pixels[img_y * img.width + img_x];
+                        fb_draw_pixel(ctx, cx + x, cy + y, col);
+                    }
+                }
+            }
+        }
+        free(img.pixels);
+    }
+
+    if (!loaded) {
+        // Fallback: Gradient Blue Badge with Owner's Initial
+        fb_fill_circle(ctx, cx, cy, radius, 0xFF1C2541);
+        fb_fill_circle(ctx, cx, cy, radius - 6, 0xFF0B132B);
+
+        // Draw initial letter in the center
+        char c = (initial && initial[0]) ? initial[0] : 'S';
+        fb_draw_char(ctx, cx - 24, cy - 28, c, 0xFF00F5D4, 7);
     }
 }
 
