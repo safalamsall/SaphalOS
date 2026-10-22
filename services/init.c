@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "init.h"
+#include "audio.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -105,6 +106,9 @@ int main(int argc, char* argv[]) {
     if (getpid() == 1) {
         mount_essential_filesystems();
     }
+
+    // Play boot sound chime asynchronously
+    play_boot_sound_async(NULL);
 
     printf("[SAPHAL-INIT] Core subsystem initialization sequence complete.\n");
     printf("[SAPHAL-INIT] System status: READY\n");
