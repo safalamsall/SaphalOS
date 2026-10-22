@@ -1,6 +1,7 @@
 # ==============================================================================
 # SAPHAL OS - Master Build Makefile
 # Project: SAPHAL OS (Security-Aware Platform for Hardened Applications and Layered OS)
+# Targets: Tier 1 QEMU Micro-Core & Tier 2 Smartphone Platform
 # ==============================================================================
 
 CC      := gcc
@@ -12,6 +13,8 @@ LDFLAGS := -m elf_i386 -T kernel/linker.ld
 
 BUILD_DIR := build
 IMG       := $(BUILD_DIR)/saphal_os.img
+INITRAMFS := $(BUILD_DIR)/initramfs.cpio.gz
+BOOTIMG   := $(BUILD_DIR)/saphal_boot.img
 
 C_SRCS := \
 	kernel/kernel.c \
@@ -30,9 +33,9 @@ ASM_OBJS := \
 	$(BUILD_DIR)/boot/stage2_entry.o \
 	$(BUILD_DIR)/kernel/idt_asm.o
 
-.PHONY: all clean run test build run-headless
+.PHONY: all clean run test build run-headless userspace bootimg test-userspace test-all
 
-all: build
+all: build userspace bootimg
 
 build: $(IMG)
 
@@ -60,8 +63,17 @@ $(IMG): $(BUILD_DIR)/boot/boot.bin $(BUILD_DIR)/kernel.bin
 	truncate -s 10M $@
 	@echo "================================================="
 	@echo "SAPHAL OS Disk Image Generated: $@"
-	@echo "Size: $$(du -h $@ | cut -f1)"
 	@echo "================================================="
+
+userspace: $(INITRAMFS)
+
+$(INITRAMFS): services/init.c services/secd.c ui/framebuffer.c ui/splash.c userspace/diagnostics.c userspace/cli/saphal_sh.c
+	./scripts/build_initramfs.sh
+
+bootimg: $(BOOTIMG)
+
+$(BOOTIMG): $(IMG) $(INITRAMFS)
+	python3 scripts/generate_bootimg.py $(BUILD_DIR)/kernel.bin $(INITRAMFS) $@ "" "console=tty0 boot=saphal-init enforcing=1"
 
 run: $(IMG)
 	tools/qemu.sh -drive format=raw,file=$(IMG),index=0,media=disk -serial stdio
@@ -71,6 +83,14 @@ run-headless: $(IMG)
 
 test: $(IMG)
 	./scripts/test_boot.sh
+
+test-userspace:
+	./scripts/test_userspace.sh
+
+test-all: test test-userspace
+	@echo "================================================="
+	@echo "  ALL TIER 1 & TIER 2 SYSTEM TESTS PASSED!"
+	@echo "================================================="
 
 clean:
 	rm -rf $(BUILD_DIR)
