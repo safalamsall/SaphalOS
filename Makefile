@@ -16,6 +16,8 @@ IMG       := $(BUILD_DIR)/saphal_os.img
 INITRAMFS := $(BUILD_DIR)/initramfs.cpio.gz
 BOOTIMG   := $(BUILD_DIR)/saphal_boot.img
 
+DTB       := $(BUILD_DIR)/cattail.dtb
+
 C_SRCS := \
 	kernel/kernel.c \
 	kernel/idt.c \
@@ -70,10 +72,14 @@ userspace: $(INITRAMFS)
 $(INITRAMFS): services/init.c services/secd.c ui/framebuffer.c ui/splash.c userspace/diagnostics.c userspace/cli/saphal_sh.c
 	./scripts/build_initramfs.sh
 
+$(DTB): arch/arm64/boot/dts/cattail.dts
+	@mkdir -p $(BUILD_DIR)
+	./tools/dtc/usr/bin/dtc -I dts -O dtb -o $@ $<
+
 bootimg: $(BOOTIMG)
 
-$(BOOTIMG): $(IMG) $(INITRAMFS)
-	python3 scripts/generate_bootimg.py $(BUILD_DIR)/kernel.bin $(INITRAMFS) $@ "" "console=tty0 boot=saphal-init enforcing=1"
+$(BOOTIMG): $(IMG) $(INITRAMFS) $(DTB)
+	python3 scripts/generate_bootimg.py $(BUILD_DIR)/kernel.bin $(INITRAMFS) $@ $(DTB) "console=tty0 boot=saphal-init enforcing=1"
 
 run: $(IMG)
 	tools/qemu.sh -drive format=raw,file=$(IMG),index=0,media=disk -serial stdio

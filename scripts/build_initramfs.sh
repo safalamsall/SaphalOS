@@ -22,6 +22,7 @@ echo "[1/4] Compiling static system binaries..."
 gcc -static -O2 -Wall -Wextra "$PROJECT_DIR/services/init.c" "$PROJECT_DIR/services/audio.c" -o "$ROOTFS_DIR/init"
 gcc -static -O2 -Wall -Wextra "$PROJECT_DIR/services/secd.c" -o "$ROOTFS_DIR/bin/saphal-secd"
 gcc -static -O2 -Wall -Wextra "$PROJECT_DIR/ui/framebuffer.c" "$PROJECT_DIR/ui/splash.c" -o "$ROOTFS_DIR/bin/saphal-splash"
+gcc -static -O2 -Wall -Wextra "$PROJECT_DIR/ui/framebuffer.c" "$PROJECT_DIR/ui/launcher.c" -o "$ROOTFS_DIR/bin/saphal-launcher"
 gcc -static -O2 -Wall -Wextra "$PROJECT_DIR/userspace/diagnostics.c" "$PROJECT_DIR/userspace/cli/saphal_sh.c" -o "$ROOTFS_DIR/bin/saphal-sh"
 
 # Copy owner avatar and boot sound chime into rootfs

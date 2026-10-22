@@ -1,0 +1,195 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Device Tree Source for Xiaomi Redmi 9 India (cattail / M2006C3MII)
+ * MediaTek Helio G35 (MT6765G) SoC
+ * SAPHAL OS Mobile Hardened Hardware Target
+ */
+
+/dts-v1/;
+
+/ {
+    model = "Xiaomi Redmi 9 (cattail / M2006C3MII)";
+    compatible = "xiaomi,cattail", "mediatek,mt6765";
+    #address-cells = <2>;
+    #size-cells = <2>;
+
+    aliases {
+        serial0 = &uart0;
+    };
+
+    chosen {
+        bootargs = "console=tty0 console=ttyMT0,921600n1 boot=saphal-init enforcing=1 panic=10";
+        stdout-path = "serial0:921600n1";
+    };
+
+    /* Verified Memory: 3780 MB LPDDR4X at 0x40000000 */
+    memory@40000000 {
+        device_type = "memory";
+        reg = <0x0 0x40000000 0x0 0xEC000000>;
+    };
+
+    cpus {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        /* Silver Cluster: 4x Cortex-A53 @ 1.8 GHz */
+        cpu0: cpu@0 {
+            device_type = "cpu";
+            compatible = "arm,cortex-a53";
+            reg = <0x0>;
+            enable-method = "psci";
+            clock-frequency = <1800000000>;
+        };
+
+        cpu1: cpu@1 {
+            device_type = "cpu";
+            compatible = "arm,cortex-a53";
+            reg = <0x1>;
+            enable-method = "psci";
+            clock-frequency = <1800000000>;
+        };
+
+        cpu2: cpu@2 {
+            device_type = "cpu";
+            compatible = "arm,cortex-a53";
+            reg = <0x2>;
+            enable-method = "psci";
+            clock-frequency = <1800000000>;
+        };
+
+        cpu3: cpu@3 {
+            device_type = "cpu";
+            compatible = "arm,cortex-a53";
+            reg = <0x3>;
+            enable-method = "psci";
+            clock-frequency = <1800000000>;
+        };
+
+        /* Gold Cluster: 4x Cortex-A53 @ 2.3 GHz */
+        cpu4: cpu@100 {
+            device_type = "cpu";
+            compatible = "arm,cortex-a53";
+            reg = <0x100>;
+            enable-method = "psci";
+            clock-frequency = <2301000000>;
+        };
+
+        cpu5: cpu@101 {
+            device_type = "cpu";
+            compatible = "arm,cortex-a53";
+            reg = <0x101>;
+            enable-method = "psci";
+            clock-frequency = <2301000000>;
+        };
+
+        cpu6: cpu@102 {
+            device_type = "cpu";
+            compatible = "arm,cortex-a53";
+            reg = <0x102>;
+            enable-method = "psci";
+            clock-frequency = <2301000000>;
+        };
+
+        cpu7: cpu@103 {
+            device_type = "cpu";
+            compatible = "arm,cortex-a53";
+            reg = <0x103>;
+            enable-method = "psci";
+            clock-frequency = <2301000000>;
+        };
+    };
+
+    psci {
+        compatible = "arm,psci-1.0", "arm,psci-0.2";
+        method = "smc";
+    };
+
+    clocks {
+        clk26m: osc26m {
+            compatible = "fixed-clock";
+            #clock-cells = <0>;
+            clock-frequency = <26000000>;
+            clock-output-names = "clk26m";
+        };
+    };
+
+    soc {
+        #address-cells = <2>;
+        #size-cells = <2>;
+        compatible = "simple-bus";
+        interrupt-parent = <&gic>;
+        ranges;
+
+        /* ARM Generic Interrupt Controller (GICv2) */
+        gic: interrupt-controller@0c000000 {
+            compatible = "arm,gic-400";
+            #interrupt-cells = <3>;
+            interrupt-controller;
+            reg = <0x0 0x0c000000 0x0 0x1000>,
+                  <0x0 0x0c010000 0x0 0x2000>;
+        };
+
+        /* AP Debug UART0 */
+        uart0: serial@11002000 {
+            compatible = "mediatek,mt6765-uart", "mediatek,mt6577-uart";
+            reg = <0x0 0x11002000 0x0 0x1000>;
+            interrupts = <0 115 4>;
+            clocks = <&clk26m>;
+            status = "okay";
+        };
+
+        /* PowerVR Rogue GE8320 GPU */
+        gpu: gpu@13000000 {
+            compatible = "img,powervr-rogue-ge8320", "img,powervr-rogue";
+            reg = <0x0 0x13000000 0x0 0x40000>;
+            interrupts = <0 210 4>;
+            status = "okay";
+        };
+
+        /* MIPI DSI Display Controller (720x1600 HD+) */
+        dsi0: dsi@14014000 {
+            compatible = "mediatek,mt6765-dsi";
+            reg = <0x0 0x14014000 0x0 0x1000>;
+            #address-cells = <1>;
+            #size-cells = <0>;
+            status = "okay";
+
+            panel: panel@0 {
+                compatible = "xiaomi,cattail-panel", "panel-mipi-dsi";
+                reg = <0>;
+                width-mm = <68>;
+                height-mm = <151>;
+
+                display-timings {
+                    timing0: timing-720x1600 {
+                        clock-frequency = <75000000>;
+                        hactive = <720>;
+                        vactive = <1600>;
+                        hfront-porch = <40>;
+                        hback-porch = <40>;
+                        hsync-len = <20>;
+                        vfront-porch = <20>;
+                        vback-porch = <20>;
+                        vsync-len = <4>;
+                    };
+                };
+            };
+        };
+
+        /* I2C Sensor Bus */
+        i2c0: i2c@11007000 {
+            compatible = "mediatek,mt6765-i2c";
+            reg = <0x0 0x11007000 0x0 0x1000>;
+            #address-cells = <1>;
+            #size-cells = <0>;
+
+            /* Verified sc7a20 Accelerometer Sensor */
+            accelerometer@18 {
+                compatible = "silan,sc7a20";
+                reg = <0x18>;
+                interrupt-parent = <&gic>;
+                interrupts = <0 134 4>;
+            };
+        };
+    };
+};
