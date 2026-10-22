@@ -133,14 +133,14 @@ int fb_init(fb_context_t* ctx, const char* device) {
         close(ctx->fd);
     }
 
-    // Fallback: Virtual Framebuffer (Standard Smartphone 1080x2340 or 720x1280)
+    // Fallback: Virtual Framebuffer (Matches Verified Xiaomi Redmi 9 cattail: 720x1600 HD+)
     ctx->is_virtual = 1;
-    ctx->width = 1080;
-    ctx->height = 2340;
+    ctx->width = 720;
+    ctx->height = 1600;
     ctx->bpp = 32;
     ctx->screensize = ctx->width * ctx->height * 4;
     ctx->fbp = (uint8_t*)calloc(1, ctx->screensize);
-    printf("[SAPHAL-FB] Operating in Virtual Smartphone Framebuffer mode (%dx%d, 32bpp).\n", ctx->width, ctx->height);
+    printf("[SAPHAL-FB] Operating in Virtual cattail Framebuffer mode (%dx%d, 32bpp).\n", ctx->width, ctx->height);
     return 0;
 }
 

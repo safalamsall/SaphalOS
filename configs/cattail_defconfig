@@ -1,0 +1,57 @@
+# ==============================================================================
+# SAPHAL OS - Xiaomi Redmi 9 India (cattail / MT6765G Helio G35) Kernel Config
+# Verified Model: M2006C3MII | Kernel Base: Linux 4.9.190
+# ==============================================================================
+
+# Target Platform & SoC
+CONFIG_ARM64=y
+CONFIG_ARCH_MEDIATEK=y
+CONFIG_MACH_MT6765=y
+CONFIG_MTK_PLATFORM="mt6765"
+
+# CPU: Octa-core ARM Cortex-A53 (8x v8-A cores)
+CONFIG_ARM64_VA_BITS_39=y
+CONFIG_ARM64_PAGE_SHIFT=12
+CONFIG_SCHED_MC=y
+CONFIG_CPU_FREQ=y
+CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
+
+# Storage & Memory (3.78 GB LPDDR4X, eMMC 5.1)
+CONFIG_MMC=y
+CONFIG_MMC_BLOCK=y
+CONFIG_MMC_MTK=y
+CONFIG_EXT4_FS=y
+CONFIG_EXT4_FS_POSIX_ACL=y
+CONFIG_EXT4_FS_SECURITY=y
+CONFIG_TMPFS=y
+CONFIG_TMPFS_POSIX_ACL=y
+
+# Display: 1600 x 720 HD+ IPS LCD Panel (MIPI DSI)
+CONFIG_FB=y
+CONFIG_FB_MTK=y
+CONFIG_FRAMEBUFFER_CONSOLE=y
+
+# GPU: Imagination Technologies PowerVR Rogue GE8320
+# Requires PowerVR DDK / Rogue driver stack (non-Mali)
+CONFIG_DRM=y
+CONFIG_POWERVR_ROGUE=m
+
+# Sensors & Input
+CONFIG_INPUT=y
+CONFIG_INPUT_TOUCHSCREEN=y
+CONFIG_SENSORS_SC7A20=y
+
+# Security Hardening
+CONFIG_SECURITY=y
+CONFIG_SECURITY_NETWORK=y
+CONFIG_SECURITY_SELINUX=y
+CONFIG_DEFAULT_SECURITY_SELINUX=y
+CONFIG_STRICT_KERNEL_RWX=y
+CONFIG_STRICT_MODULE_RWX=y
+CONFIG_CC_STACKPROTECTOR_STRONG=y
+CONFIG_PANIC_ON_OOPS=y
+
+# Non-Android Architecture: Purged Android Bloatware
+# CONFIG_ANDROID is not set
+# CONFIG_ASHMEM is not set
+# CONFIG_ANDROID_BINDER_IPC is not set
