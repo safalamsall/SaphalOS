@@ -6,6 +6,19 @@ static int is_transmit_empty(void) {
     return inb(COM1_PORT + 5) & 0x20;
 }
 
+int serial_has_char(void) {
+    return inb(COM1_PORT + 5) & 0x01;
+}
+
+char serial_getchar(void) {
+    while (!serial_has_char()) {
+        io_wait();
+    }
+    char c = (char)inb(COM1_PORT);
+    if (c == '\r') c = '\n'; // Normalize carriage return to newline
+    return c;
+}
+
 void serial_init(void) {
     outb(COM1_PORT + 1, 0x00);    // Disable interrupts
     outb(COM1_PORT + 3, 0x80);    // Enable DLAB (set baud rate divisor)
