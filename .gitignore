@@ -1,4 +1,5 @@
 build/
-tools/qemu/deb/
-tools/qemu/root/
+tools/qemu/
 *.log
+*.img
+*.bin
